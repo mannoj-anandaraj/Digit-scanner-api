@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from app.schemas import PredictionResponse, HealthResponse
 from app.model import get_model, predict
@@ -40,11 +41,15 @@ app.add_middleware(
 )
 
 
-@app.get("/", response_model=HealthResponse, tags=["Health"])
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    return FileResponse("static/index.html")
+
+
+@app.get("/health", response_model=HealthResponse, tags=["Health"])
 def health_check():
     """
     Health check endpoint. Returns API status and model info.
-    Use this to confirm the service is running before sending predictions.
     """
     return {
         "status": "ok",
