@@ -25,10 +25,20 @@ def preprocess_image(image_bytes: bytes) -> np.ndarray:
     Accepts any common image format (PNG, JPEG, BMP).
     Converts to 28x28 grayscale, normalises to [0, 1],
     and reshapes to (1, 28, 28, 1) for the model.
+
+    MNIST expects white digit on black background.
+    If the uploaded image has a white background (common in real-world images),
+    we automatically invert it so the model reads it correctly.
     """
     img = Image.open(io.BytesIO(image_bytes)).convert("L")  # grayscale
     img = img.resize((28, 28), Image.LANCZOS)
-    arr = np.array(img, dtype=np.float32) / 255.0
+
+    # Auto-invert: if background is light (avg pixel > 127), invert the image
+    arr = np.array(img, dtype=np.float32)
+    if arr.mean() > 127:
+        arr = 255.0 - arr  # invert: white bg → black bg, black digit → white digit
+
+    arr = arr / 255.0
     arr = arr.reshape(1, 28, 28, 1)
     return arr
 
